@@ -18,15 +18,31 @@
 
 ---
 
-## 2. Test Suites Implemented
+## 2. Before vs After Fuzz Testing
 
-### A. Starter Specification Suite (`test_processor.py`)
+### A. Before (Unhandled Arbitrary Inputs)
+Fuzzing arbitrary input strings (`st.text() | st.none()`) against unprotected code immediately uncovers falsifying examples, raising uncaught `AttributeError` on `NoneType`, `ValueError` on missing delimiters, and `ZeroDivisionError`:
+
+![Fuzz Testing Before](./fuzz_test_before.png)
+
+---
+
+### B. After (Defensive Exception Handling & Property Verification)
+With structured error boundaries and property verification in place, the fuzz suite reliably validates that all malformed inputs are safely absorbed without application crashes, while valid combinations strictly adhere to safety and throughput contracts:
+
+![Fuzz Testing After](./fuzz_test_after.png)
+
+---
+
+## 3. Test Suites Implemented
+
+### Starter Specification Suite (`test_processor.py`)
 Implements the required error-handling boundaries using `try-except` blocks under arbitrary text and `None` fuzz strategies (`@given(st.text() | st.none())`):
 - `test_validate_height_and_fastpass_no_crash(s)`: Catches `(ValueError, KeyError, TypeError, AttributeError, IndexError)`.
 - `test_compute_dispatch_throughput_safe(s)`: Catches `(ValueError, ZeroDivisionError, TypeError, AttributeError, IndexError)`.
 - `test_resolve_safety_restraint_code_safe(s)`: Catches `(KeyError, TypeError, AttributeError, IndexError)`.
 
-### B. Extended Property & Invariant Suite (`test_fuzz_processor.py`)
+### Extended Property & Invariant Suite (`test_fuzz_processor.py`)
 1. **Semantic Validity Invariant:** Validates height threshold logic (`>= 120cm -> Approved`) and case-insensitive fastpass status (`YES -> FastPass Priority`).
 2. **Throughput Precision Property:** Verifies floating-point division and `round(rate, 2)` consistency across wide numerical bounds.
 3. **Restraint Mapping Invariant:** Validates deterministic code-to-restraint dictionary lookups for standard prefixes (`CST`, `WTR`, `DRP`, `WHL`).
@@ -34,7 +50,7 @@ Implements the required error-handling boundaries using `try-except` blocks unde
 
 ---
 
-## 3. Test Execution & Results
+## 4. Test Execution & Coverage Summary
 
 ### Pytest Execution:
 ```bash
@@ -74,8 +90,10 @@ TOTAL                      103      1      6      1    98%
 
 ---
 
-## 4. Deliverables Checklist
+## 5. Deliverables Checklist
 - [x] `processor.py` (Source code under test)
 - [x] `test_processor.py` (Completed starter fuzz tests with Hypothesis)
 - [x] `test_fuzz_processor.py` (Comprehensive invariant and property tests)
+- [x] `fuzz_test_before.png` (Terminal screenshot showing crashes uncovered by fuzzing before defensive handling)
+- [x] `fuzz_test_after.png` (Terminal screenshot showing all 10 fuzz & property tests passing cleanly)
 - [x] `README.md` (Lab documentation and execution log)
